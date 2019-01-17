@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Fri Feb 20 23:34:39 CST 2015-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="crawlRuleMapper">
+
+    <insert id="initCrawlRule"
+            parameterType="com.transing.crawl.integration.bo.CrawlRuleBO"
+            useGeneratedKeys="true" keyProperty="id">
+    INSERT  INTO crawl_rule (id,datasource_id,datasource_type_id,rule_name,create_time,lastmodify_time)
+    VALUES (#{id},#{datasourceId},#{datasourceTypeId},#{ruleName},now(),now())
+</insert>
+
+    <update id="modifyCrawlRule"
+            parameterType="com.transing.crawl.integration.bo.CrawlRuleBO">
+    UPDATE crawl_rule
+    SET
+    rule_name = #{ruleName},
+    request_method = #{requestMethod},
+    request_encoding =#{requestEncoding},
+    response_encoding = #{responseEncoding},
+    crawl_url = #{crawlUrl},
+    test_url = #{testUrl},
+    lastmodify_time = now()
+    WHERE id=#{id}
+</update>
+
+    <select id="getCrawlRuleBoList" parameterType="java.util.Map"
+            resultType="com.transing.crawl.integration.bo.CrawlRuleBO">
+        SELECT id,datasource_id as datasourceId,datasource_type_id as
+        datasourceTypeId,rule_name as ruleName,
+        request_method as requestMethod,request_encoding as
+        requestEncoding,response_encoding as responseEncoding,crawl_url as
+        crawlUrl,
+        test_url as testUrl,create_time as createTime,lastmodify_time as
+        lastmodifyTime
+        FROM crawl_rule
+        WHERE
+        1=1
+        <if test="datasourceId != null">
+            AND datasource_id=#{datasourceId}
+        </if>
+        <if test="datasourceTypeId != null">
+            AND datasource_type_id=#{datasourceTypeId}
+        </if>
+        <if test="ruleName != null ">
+            AND crawl_rule.rule_name LIKE concat("%",#{ruleName},"%")
+        </if>
+        <if test="ruleId !=null">
+            AND id =#{ruleId}
+        </if>
+
+        <if test="page != null">
+            limit #{page}
+            <if test="size!= null  and size!=''">,#{size}</if>
+        </if>
+
+    </select>
+
+    <select id="getCrawlRuleCount" parameterType="java.util.Map"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM crawl_rule
+        WHERE 1=1
+        <if test="datasourceId != null">
+            AND datasource_id=#{datasourceId}
+        </if>
+        <if test="datasourceTypeId != null">
+            AND datasource_type_id=#{datasourceTypeId}
+        </if>
+        <if test="ruleName != null ">
+            AND crawl_rule.rule_name LIKE concat("%",#{ruleName},"%")
+        </if>
+    </select>
+
+
+    <!-- 规则的处理器 -->
+    <select id="getProcessorList"
+            resultType="com.transing.crawl.integration.bo.CrawlRuleProcessorBO">
+    SELECT id , processor_name as processorName,processor_path as processorPath
+    FROM processor
+    order BY sort_no asc
+</select>
+
+    <select id="getProcessor" parameterType="int"
+            resultType="com.transing.crawl.integration.bo.CrawlRuleProcessorBO">
+    SELECT id , processor_name as processorName,processor_path as processorPath
+    FROM processor
+    WHERE id= #{id}
+</select>
+
+
+    <!-- 规则的解析方式  -->
+    <select id="getCrawlRuleAnalysisTypList"
+            resultType="com.transing.crawl.integration.bo.CrawlRuleAnalysisTypeBO">
+    SELECT  id ,analysis_name as parseName
+    FROM analysis_type
+    ORDER by id ASC
+</select>
+    <select id="getCrawlRuleAnalysisTypeBO" parameterType="int"
+            resultType="com.transing.crawl.integration.bo.CrawlRuleAnalysisTypeBO">
+    SELECT id,analysis_name as parseName
+    FROM analysis_type
+    WHERE id=#{id}
+</select>
+
+
+    <!--规则的头部参数-->
+    <select id="getCrawlRuleRequestHeaederList" parameterType="java.util.Map"
+            resultType="com.transing.crawl.integration.bo.CrawlRuleRequestHeaderBO">
+        SELECT id,crawl_rule_id as crawlRuleId,header_name as
+        headerName,header_type as headerType,input_type as inputType,
+        header_value as headerValue,create_time as createTime,lastmodify_time as
+        lastmodifyTime
+        FROM crawl_rule_request_header
+        WHERE 1=1
+        <if test="ruleId != null">
+            AND crawl_rule_id = #{ruleId}
+        </if>
+    </select>
+    <insert id="saveCrawlRuleRequestHeaderBO"
+            parameterType="com.transing.crawl.integration.bo.CrawlRuleRequestHeaderBO"
+            useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO crawl_rule_request_header(id,crawl_rule_id,header_name,header_type,input_type,header_value,create_time,lastmodify_time)
+    VALUES (#{id},#{crawlRuleId},#{headerName},#{headerType},#{inputType},#{headerValue},now(),now())
+</insert>
+    <update id="modifyCrawlRuleRequestHeaderBO"
+            parameterType="com.transing.crawl.integration.bo.CrawlRuleRequestHeaderBO">
+    UPDATE crawl_rule_request_header
+    SET
+    header_name =#{headerName},
+    header_type =#{headerType},
+    input_type =#{inputType},
+    header_value=#{headerValue},
+    lastmodify_time =now()
+    WHERE id =#{id}
+</update>
+    <delete id="delCrawlRuleRequestHeaderBO">
+        DELETE FROM crawl_rule_request_header
+        WHERE crawl_rule_id=#{ruleId}
+    </delete>
+
+
+    <!--规则的头部参数后置处理器-->
+    <select id="getCrawlRuleRequestHeaderSufferProcBO"
+            parameterType="java.util.Map"
+            resultType="com.transing.crawl.integration.bo.CrawlRuleRequestHeaderSufferProcBO">
+        SELECT id,request_header_id as requestHeaderId,processor_id as
+        processorId,processor_value as processorValue,
+        create_time as createTime,lastmodify_time as lastmodifyTime
+        FROM crawl_rule_req_header_suff_proc
+        WHERE 1=1
+        <if test="requestHeaderId !=null">
+            AND request_header_id=#{requestHeaderId}
+        </if>
+    </select>
+    <insert id="saveCrawlRuleRequestHeaderSufferProcBO"
+            parameterType="com.transing.crawl.integration.bo.CrawlRuleRequestHeaderSufferProcBO"
+            useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO crawl_rule_req_header_suff_proc(id,request_header_id,processor_id,processor_value,create_time,lastmodify_time)
+    VALUES (#{id},#{requestHeaderId},#{processorId},#{processorValue},now(),now())
+</insert>
+    <update id="modifyCrawlRuleRequestHeaderSufferProcBO"
+            parameterType="com.transing.crawl.integration.bo.CrawlRuleRequestHeaderSufferProcBO">
+    UPDATE crawl_rule_req_header_suff_proc
+    SET
+    processor_id=#{processorId},
+    processor_value=#{processorValue},
+    lastmodify_time=now()
+    WHERE id =#{id}
+</update>
+    <delete id="delCrawlRuleRequestHeaderSufferProcBO">
+        DELETE FROM crawl_rule_req_header_suff_proc
+        WHERE
+       request_header_id =#{headerId}
+    </delete>
+
+
+    <!--规则的请求参数-->
+    <select id="getCrawlRuleRequestParamList" parameterType="java.util.Map"
+            resultType="com.transing.crawl.integration.bo.CrawlRuleRequestParamBO">
+        SELECT
+        id,crawl_rule_id as crawlRuleId,param_name as paramName,param_type as
+        paramType,input_type as inputType,
+        param_value as paramValue,create_time as createTime,lastmodify_time as
+        lastmodifyTime
+        FROM crawl_rule_request_param
+        WHERE 1=1
+        <if test="ruleId != null ">
+            AND crawl_rule_id =#{ruleId}
+        </if>
+        <if test="paramName != null">
+            AND param_name= #{paramName}
+        </if>
+    </select>
+    <update id="modifyCrawlRuleRequestParam"
+            parameterType="com.transing.crawl.integration.bo.CrawlRuleRequestParamBO">
+    UPDATE crawl_rule_request_param
+    SET
+    param_name =#{paramName},
+    param_value = #{paramValue},
+    param_type = #{paramType},
+    input_type = #{inputType},
+    lastmodify_time =#{lastmodifyTime}
+    WHERE id =#{id}
+</update>
+
+    <insert id="saveCrawlRuleRequestParam"
+            parameterType="com.transing.crawl.integration.bo.CrawlRuleRequestParamBO"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO crawl_rule_request_param (id,
+        crawl_rule_id, param_name, param_type, input_type, param_value,
+        create_time, lastmodify_time)
+        VALUES (#{id},
+        #{crawlRuleId},#{paramName},#{paramType},#{inputType},#{paramValue},now(),now())
+    </insert>
+
+    <delete id="delCrawlRuleRequestParam">
+        DELETE FROM crawl_rule_request_param
+        WHERE crawl_rule_id =#{crawlRuleId}
+    </delete>
+
+    <!--请求参数处理器-->
+    <select id="getCrawlRuleRequestParamSuffProcList"
+            parameterType="java.util.Map"
+            resultType="com.transing.crawl.integration.bo.CrawlRuleRequestParamSufferProcBO">
+    SELECT id,request_param_id as requestParamId,processor_id as processorId,processor_value as processorValue,create_time as createTime,lastmodify_time as lastmodifyTime
+    FROM crawl_rule_req_param_suff_proc
+    WHERE request_param_id =#{requestParamId}
+</select>
+    <insert id="saveCrawlRuleRequestParamSuffProc"
+            parameterType="com.transing.crawl.integration.bo.CrawlRuleRequestParamSufferProcBO"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO crawl_rule_req_param_suff_proc(id,
+        request_param_id,processor_id,processor_value,create_time,lastmodify_time)
+        VALUES (#{id},
+        #{requestParamId},#{processorId},#{processorValue},now(),now())
+    </insert>
+    <update id="modifyCrawlRuleRequestParamSuffProc"
+            parameterType="com.transing.crawl.integration.bo.CrawlRuleRequestParamSufferProcBO">
+        UPDATE crawl_rule_req_param_suff_proc
+        SET
+        processor_id=#{processorId},
+        processor_value=#{processorValue},
+        lastmodify_time=now()
+        WHERE id =#{id}
+    </update>
+    <delete id="delCrawlRuleRequestParamSuffProc">
+        DELETE FROM crawl_rule_req_param_suff_proc
+        WHERE request_param_id=#{paramId}
+    </delete>
+
+
+    <!--规则的页码配置-->
+
+    <select id="getCrawlRulePageBO" parameterType="long"
+            resultType="com.transing.crawl.integration.bo.CrawlRulePageBO">
+        SELECT id, crawl_rule_id  as  crawlRuleId, first_url as firstUrl, calculation, format_type as formatType, start_page as startPage, end_page as endPage,
+        step_length as stepLength, fomat, end_page_identifier as  endPageIdentifier, end_page_similarity as endPageSimilarity, page_size as pageSize,
+         max_page as maxPage, create_time as createTime, lastmodify_time as lastmodifyTime
+        FROM crawl_rule_page
+        WHERE crawl_rule_id =#{crawlRuleId}
+    </select>
+
+    <insert id="saveCrawlRulePageBO"
+            parameterType="com.transing.crawl.integration.bo.CrawlRulePageBO"
+            keyProperty="id" useGeneratedKeys="true">
+        INSERT INTO crawl_rule_page(id,crawl_rule_id, first_url, calculation, format_type, start_page, end_page, step_length, fomat, end_page_identifier, end_page_similarity, page_size, max_page, create_time, lastmodify_time)
+        VALUES (#{id},#{crawlRuleId},#{firstUrl},#{calculation},#{formatType},#{startPage},#{endPage},#{stepLength},#{fomat},#{endPageIdentifier},#{endPageSimilarity},#{pageSize},#{maxPage},now(),now())
+    </insert>
+
+    <update id="modifyCrawlRulePageBO"
+            parameterType="com.transing.crawl.integration.bo.CrawlRulePageBO">
+        UPDATE crawl_rule_page
+        SET
+          first_url =#{firstUrl},
+          calculation=#{calculation},
+          format_type=#{formatType},
+          start_page=#{startPage},
+          end_page=#{endPage},
+          step_length=#{stepLength},
+          fomat=#{fomat},
+          end_page_identifier=#{endPageIdentifier},
+          end_page_similarity=#{endPageSimilarity},
+          page_size=#{pageSize},
+          max_page=#{maxPage},
+          lastmodify_time=now()
+        WHERE id=#{id}
+    </update>
+
+    <delete id="delCrawlRulePageBO" parameterType="long">
+        DELETE FROM  crawl_rule_page WHERE crawl_rule_id =#{crawlRuleId}
+    </delete>
+
+    <!--规则的页码解析-->
+
+    <select id="getCrawlRulePageParseBO" parameterType="java.util.Map"
+            resultType="com.transing.crawl.integration.bo.CrawlRulePageParseBO">
+        SELECT id, crawl_rule_page_id as crawlRulePageId, parse_type as
+        parseType, parse_expression as parseExpression, create_time as
+        createTime, lastmodify_time as lastmodifyTime
+        FROM crawl_rule_page_parse
+        WHERE 1=1
+        <if test="crawlRulePageId != null">
+            AND crawl_rule_page_id =#{crawlRulePageId}
+        </if>
+    </select>
+    <insert id="saveCrawlRulePageParaseBO" useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO crawl_rule_page_parse(id,
+        crawl_rule_page_id, parse_type, parse_expression, create_time,
+        lastmodify_time)
+        VALUES (#{id},
+        #{crawlRulePageId},#{parseType},#{parseExpression},now(),now());
+    </insert>
+
+    <update id="modifyCrawlRulePageParseBO"
+            parameterType="com.transing.crawl.integration.bo.CrawlRulePageParseBO">
+        UPDATE crawl_rule_page_parse
+        SET parse_type =#{parseType},
+        parse_expression =#{parseExpression},
+        lastmodify_time =now()
+        WHERE id=#{id}
+    </update>
+    <delete id="delCrawlRulePageParseBOs">
+        DELETE FROM crawl_rule_page_parse
+        WHERE crawl_rule_page_id=#{pageId}
+    </delete>
+
+
+    <!--规则的页码解析处理器-->
+    <select id="getCrawlRulePageSuffProcBO"
+            parameterType="java.util.Map"
+            resultType="com.transing.crawl.integration.bo.CrawlRulePageSuffProcBO">
+
+      SELECT  id,crawl_rule_page_id as crawlRulePageId, processor_id as processorId, processor_value as processorValue, create_time as createTime, lastmodify_time as lastmodifyTime
+      FROM crawl_rule_page_suff_proc
+      WHERE crawl_rule_page_id=#{crawlRulePageId}
+    </select>
+    <insert id="saveCrawlRulePageSuffProcBO"
+            parameterType="com.transing.crawl.integration.bo.CrawlRulePageSuffProcBO"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO crawl_rule_page_suff_proc (id,
+        crawl_rule_page_id, processor_id, processor_value, create_time,
+        lastmodify_time)
+        VALUES (#{id},
+        #{crawlRulePageId},#{processorId},#{processorValue},now(),now())
+    </insert>
+    <update id="modifyCrawlRulePageSuffProcBO"
+            parameterType="com.transing.crawl.integration.bo.CrawlRulePageSuffProcBO">
+        UPDATE crawl_rule_page_suff_proc
+        SET
+        processor_id=#{processorId},
+        processor_value=#{processorValue},
+        lastmodify_time=now()
+        WHERE id =#{id}
+    </update>
+    <delete id="delCrawlRulePageSuffProcBO">
+        DELETE FROM crawl_rule_page_suff_proc
+        WHERE crawl_rule_page_id =#{pageId}
+    </delete>
+
+    <select id="getCrawlRuleRequestParamByParamValue"
+            parameterType="java.util.Map"
+            resultType="com.transing.crawl.integration.bo.CrawlRuleRequestParamBO">
+        SELECT id,
+        crawl_rule_id as crawlRuleId,param_name as paramName,param_type as paramType,input_type as inputType,param_value as paramValue,create_time as createTime,lastmodify_time as lastmodifyTime
+        FROM crawl_rule_request_param
+        WHERE input_type=2
+        <if test="paramValue != null">
+            AND param_value =#{paramValue}
+        </if>
+    </select>
+
+</mapper>

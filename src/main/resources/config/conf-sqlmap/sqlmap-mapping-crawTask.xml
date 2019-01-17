@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Fri Feb 20 23:34:39 CST 2015-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="crawlTaskMapper">
+    <!-- TODO: 在这里定义各种sql语句，用法请参考iBATIS文档 -->
+
+    <select id="getCrawlTaskListByFilter" parameterType="com.transing.crawl.web.filter.CrawlTaskFilter"
+            resultType="com.transing.crawl.integration.bo.CrawlTaskBO">
+        SELECT
+        id,task_name as taskName,datasource_id as datasourceId,datasource_type_id as datasourceTypeId,error_msg as
+        errorMsg,task_status as taskStatus,json_param as jsonParam,complete_sub_task_num as
+        completeSubTaskNum,detail_id as detailId,sub_task_num as subTaskNum,project_id as projectId,create_time as createTime,lastmodify_time as lastmodifyTime
+        FROM crawl_task_info
+        WHERE 1=1
+        <if test="taskName != null  and taskName!=''">
+            and task_name like CONCAT('%',#{taskName},'%')
+        </if>
+        <if test="datasourceId != null  and datasourceId!=''">
+            and datasource_id = #{datasourceId}
+        </if>
+        <if test="datasourceTypeId != null  and datasourceTypeId!=''">
+            and datasource_type_id = #{datasourceTypeId}
+        </if>
+        <if test="status != null  and status!=''">
+            and task_status = #{status}
+        </if>
+        <if test="project !=null and project!=''">
+            AND project_id=#{project}
+        </if>
+        <if test="createdTime != null  and createdTime!=''">
+            <![CDATA[
+            and DATEDIFF(create_time,#{createdTime})=0
+            ]]>
+        </if>
+        <if test="createTimeBefore !=null and createTimeBefore !=''">
+            <![CDATA[
+              AND create_time <= #{createTimeBefore}
+            ]]>
+        </if>
+        order by create_time desc
+        <if test="startRow != null">
+            limit #{startRow}
+            <if test="size!= null  and size!=''">,#{size}</if>
+        </if>
+    </select>
+
+    <select id="getCrawlTaskCountByFilter" parameterType="com.transing.crawl.web.filter.CrawlTaskFilter"
+            resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM crawl_task_info
+        WHERE 1=1
+        <if test="taskName != null  and taskName!=''">
+            and task_name like CONCAT('%',#{taskName},'%')
+        </if>
+        <if test="datasourceId != null  and datasourceId!=''">
+            and datasource_id = #{datasourceId}
+        </if>
+        <if test="datasourceTypeId != null  and datasourceTypeId!=''">
+            and datasource_type_id = #{datasourceTypeId}
+        </if>
+        <if test="status != null  and status!=''">
+            and task_status = #{status}
+        </if>
+        <if test="project !=null  and project!=''">
+            AND project_id=#{project}
+        </if>
+        <if test="createdTime != null  and createdTime!=''">
+            and DATEDIFF(create_time,#{createdTime})=0
+        </if>
+    </select>
+
+    <select id="getSubTaskCount" parameterType="java.util.Map" resultType="java.lang.Long">
+        SELECT count(*) FROM crawl_sub_task
+        WHERE 1=1
+        <if test="status!=null">
+            AND task_status=#{status}
+        </if>
+        <if test="taskId !=null">
+            AND crawl_sub_task.task_id=#{taskId}
+        </if>
+        <if test="subTaskId !=null">
+            AND crawl_sub_task.id=#{subTaskId}
+        </if>
+        <if test="startTime !=null">
+            <![CDATA[
+          AND create_time > #{startTime}
+        ]]>
+        </if>
+        <if test="endTime !=null">
+            <![CDATA[
+          AND  create_time < #{endTime}
+        ]]>
+        </if>
+    </select>
+    <select id="getCrawlSubTaskListByTaskId" parameterType="java.util.Map"
+            resultType="java.lang.Integer">
+        SELECT crawl_data_num FROM crawl_sub_task
+        WHERE 1=1
+        <if test="taskId != null  ">
+            and task_id = #{taskId}
+        </if>
+    </select>
+
+    <select id="getCrawlSubTaskListByTaskIdAndSubId" parameterType="java.util.Map"
+            resultType="com.transing.crawl.integration.bo.CrawlSubTaskBO">
+        SELECT id,task_id as taskId,crawl_url as crawlUrl,task_progress as taskProgress,task_status as taskStatus,
+        error_msg as errorMsg,host,param_value as paramValue,crawl_data_num as crawlDataNum,create_time as
+        createTime,lastmodify_time as lastmodifyTime FROM crawl_sub_task
+        WHERE 1=1
+        <if test="taskId != null  ">
+            and task_id = #{taskId}
+        </if>
+        <if test="subId != null  ">
+            and id = #{subId}
+        </if>
+    </select>
+
+    <select id="getCrawlTaskListById" parameterType="java.util.Map"
+            resultType="com.transing.crawl.integration.bo.CrawlTaskBO">
+        SELECT
+        id,task_name as taskName ,datasource_id as datasourceId,datasource_type_id as datasourceTypeId,error_msg as
+        errorMsg,
+        task_status as taskStatus,json_param as jsonParam,complete_sub_task_num as completeSubTaskNum,sub_task_num as
+        subTaskNum,project_id as projectId,create_time as createTime,lastmodify_time as lastmodifyTime
+        FROM crawl_task_info
+        WHERE 1=1
+        <if test="taskId != null  ">
+            and id = #{taskId}
+        </if>
+    </select>
+
+
+    <insert id="saveCrawlTaskInfoBo"
+            parameterType="com.transing.crawl.integration.bo.CrawlTaskBO"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO crawl_task_info(task_name, datasource_id, datasource_type_id, error_msg, task_status, json_param,detail_id, complete_sub_task_num, sub_task_num,project_id, create_time, lastmodify_time)
+         VALUES (#{taskName},#{datasourceId},#{datasourceTypeId},#{errorMsg},#{taskStatus},#{jsonParam},#{detailId},#{completeSubTaskNum},#{subTaskNum},#{projectId},now(),now())
+    </insert>
+
+    <select id="getCrawlTaskInfoByDetailId" parameterType="java.util.List"
+            resultType="com.transing.crawl.integration.bo.CrawlTaskBO">
+        SELECT
+        id,task_name as taskName,datasource_id as datasourceId,datasource_type_id as datasourceTypeId,error_msg as errorMsg,task_status as taskStatus,json_param as jsonParam,complete_sub_task_num as completeSubTaskNum,sub_task_num as subTaskNum,project_id as projectId,create_time,lastmodify_time,
+        detail_id as detailId,discard_num as discardNum
+        FROM crawl_task_info
+        where task_status =1 and detail_id in
+         <foreach collection="list" item="item" open="(" separator="," close=")">
+             #{item}
+         </foreach>
+    </select>
+
+    <update id="modifyCrawlTaskInfoBO" parameterType="java.util.Map">
+        UPDATE crawl_task_info
+        SET
+        <if test="errorMsg !=null">
+            error_msg =#{errorMsg},
+        </if>
+        <if test="discardNum != null">
+            discard_num=#{discardNum},
+        </if>
+        <if test="taskStatus != null">
+            task_status =#{taskStatus},
+        </if>
+        <if test="completeSubTaskNum != null">
+            complete_sub_task_num =#{completeSubTaskNum},
+        </if>
+        <if test="subTaskNum != null">
+            sub_task_num =#{subTaskNum},
+        </if>
+        lastmodify_time=now()
+        WHERE id =#{id}
+    </update>
+
+    <insert id="saveCrawlSubTaskInfo" parameterType="com.transing.crawl.integration.bo.CrawlSubTaskBO"
+            useGeneratedKeys="true"
+            keyProperty="id">
+        INSERT INTO crawl_sub_task (task_id, crawl_url, task_progress, task_status, error_msg, host,param_value, crawl_data_num, create_time, lastmodify_time)
+        VALUES (#{taskId},#{crawlUrl},#{taskProgress},#{taskStatus},#{errorMsg},#{host},#{paramValue},#{crawlDataNum},now(),now())
+    </insert>
+
+    <update id="modifyCrawlSubTaskInfo" parameterType="java.util.Map">
+        UPDATE crawl_sub_task
+        SET
+        <if test="complatePage !=null">
+            complate_page = #{complatePage},
+        </if>
+        <if test="taskProgress != null">
+            task_progress = #{taskProgress},
+        </if>
+        <if test="taskStatus != null">
+            task_status = #{taskStatus},
+        </if>
+        <if test="errorMsg != null">
+            error_msg =#{errorMsg},
+        </if>
+        <if test="crawlDataNum != null">
+            crawl_data_num = #{crawlDataNum},
+        </if>
+        lastmodify_time=now()
+        WHERE id=#{id}
+    </update>
+
+
+    <select id="getCrawlSubTaskBos"
+            parameterType="java.util.Map"
+            resultType="com.transing.crawl.integration.bo.CrawlSubTaskBO">
+         SELECT id,task_id as taskId,crawl_url as crawlUrl,task_progress as taskProgress,task_status as taskStatus,complate_page as complatePage,
+        error_msg as errorMsg,host,param_value as paramValue,crawl_data_num as crawlDataNum,create_time as
+        createTime,lastmodify_time as lastmodifyTime FROM crawl_sub_task
+        WHERE 1=1
+        <if test="status!=null">
+            AND task_status=#{status}
+        </if>
+        <if test="taskId !=null">
+            AND crawl_sub_task.task_id=#{taskId}
+        </if>
+        <if test="subTaskId !=null">
+            AND crawl_sub_task.id=#{subTaskId}
+        </if>
+        <if test="complateStatus !=null">
+            AND task_status in (2,9)
+        </if>
+        <if test="startTime !=null">
+        <![CDATA[
+          AND create_time > #{startTime}
+        ]]>
+        </if>
+        <if test="endTime !=null">
+            <![CDATA[
+          AND  create_time < #{endTime}
+        ]]>
+        </if>
+        order by create_time desc
+        <if test="startRow != null">
+            limit #{startRow}
+            <if test="size!= null  and size!=''">,#{size}</if>
+        </if>
+    </select>
+
+
+
+    <!--任务调度中的task-->
+    <select id="getCrawlSubTaskJob"
+            parameterType="java.util.Map"
+            resultType="com.transing.crawl.job.impl.CrawlSubTask">
+        SELECT id,job_name as name,state,progress,ip,param,message,project_id as projectId,flow_detail_id as flowdetailId,task_id as taskId
+        FROM ${tableName}
+        WHERE 1=1
+        <if test="projectId !=null">
+            AND project_id=#{projectId}
+        </if>
+        <if test="task !=null">
+            and task_id=#{task_id}
+        </if>
+        <if test="detailId !=null">
+            and flow_detail_id=#{detailId}
+        </if>
+    </select>
+
+
+    <!--删除任务表的数据-->
+    <delete id="delCrawlTaskBo">
+        DELETE from crawl_task_info where id=#{id}
+    </delete>
+    
+    <delete id="delCrawlSubTaskBo">
+        DELETE from crawl_sub_task where task_id=#{taskId}
+    </delete>
+</mapper>
